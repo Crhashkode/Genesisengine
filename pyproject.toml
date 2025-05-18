@@ -1,0 +1,13 @@
+[tool.poetry]
+name = "crk-bot"
+version = "0.1.0"
+description = "FlameBot CRK Automation"
+authors = ["C.R.hash <crhash@divineedge.io>"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+solana = "^0.36.6"
+solders = "^0.15.0"
+spl-token = "^0.2.0"
+discord.py = "^2.3.2"
+base58 = "^2.1.1"
