@@ -2,8 +2,8 @@ import os
 import discord
 import asyncio
 from discord.ext import commands
-from engine.flame_interface import mint_crk_token, get_crk_balance
-from engine.withdraw_crk import withdraw_crk_token
+from Engine.flame_interface import mint_crk_token, get_crk_balance
+from Engine.withdraw_crk import withdraw_crk_token
 from vault import log_event
 from solana.rpc.api import Client
 
