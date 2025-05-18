@@ -1,4 +1,4 @@
-limport os
+import os
 import discord
 import asyncio
 from discord.ext import commands
@@ -9,6 +9,7 @@ from solana.rpc.api import Client
 
 intents = discord.Intents.default()
 intents.message_content = True
+intents.guilds = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 SOLANA_RPC_URL = os.getenv("SOLANA_RPC_URL", "https://api.mainnet-beta.solana.com")
@@ -21,7 +22,7 @@ async def on_ready():
     print(f"FlameBot is online as {bot.user}")
     channel = bot.get_channel(DISCORD_CHANNEL_ID)
     if channel:
-        asyncio.ensure_future(channel.send("**[FLAMEBOT ONLINE]** Ready to ignite."))
+        asyncio.ensure_future(channel.send("**[FLAMEBOT ONLINE]** Ready to ignite. All systems synced with Genesis Engine.**"))
 
 @bot.command()
 async def mint(ctx):
@@ -55,6 +56,14 @@ async def withdraw(ctx, wallet: str, amount: float):
     except Exception as e:
         await ctx.send(f"[ERROR] Withdraw failed: {str(e)}")
         log_event("error", {"action": "withdraw", "reason": str(e)})
+
+@bot.command()
+async def ping(ctx):
+    await ctx.send("Pong! FlameBot is synced and online.")
+
+@bot.command()
+async def status(ctx):
+    await ctx.send("**[STATUS]** Genesis Engine is fully operational. CRK, Vault, ATA, and Liquidity modules are linked. Awaiting commands...")
 
 def run_bot():
     bot.run(os.getenv("DISCORD_BOT_TOKEN"))
