@@ -6,11 +6,11 @@ from Interface.interface_discord import (
     handle_mint, handle_balance, handle_withdraw,
     handle_ping, handle_status
 )
+from Vault.vault import log_event  # <<== Vault logging added
 
 intents = discord.Intents.default()
 intents.message_content = True
 intents.guilds = True
-
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 DISCORD_CHANNEL_ID = os.getenv("DISCORD_CHANNEL_ID")
@@ -27,8 +27,9 @@ async def on_ready():
         channel = bot.get_channel(DISCORD_CHANNEL_ID)
         if channel:
             await channel.send("**[FLAMEBOT ONLINE]** Ready to ignite. All systems synced with Genesis Engine.")
+            log_event("flamebot_start", {"status": "ready", "bot_id": str(bot.user.id)})
         else:
-            print(f"[WARNING] Could not find channel with ID {DISCORD_CHANNEL_ID}")
+            print("[WARNING] Could not find the channel.")
     except Exception as e:
         print(f"[ERROR] Discord message failed: {str(e)}")
 
@@ -57,10 +58,7 @@ def run_bot():
     if not token:
         print("[ERROR] Missing DISCORD_BOT_TOKEN in environment.")
         return
-    try:
-        bot.run(token)
-    except Exception as e:
-        print(f"[ERROR] Bot run failed: {str(e)}")
+    bot.run(token)
 
 if __name__ == "__main__":
     run_bot()
