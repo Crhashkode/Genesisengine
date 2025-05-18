@@ -66,4 +66,11 @@ async def status(ctx):
     await ctx.send("**[STATUS]** Genesis Engine is fully operational. CRK, Vault, ATA, and Liquidity modules are linked. Awaiting commands...")
 
 def run_bot():
-    bot.run(os.getenv("DISCORD_BOT_TOKEN"))
+    token = os.getenv("DISCORD_BOT_TOKEN")
+    if not token:
+        print("[ERROR] Missing DISCORD_BOT_TOKEN in environment.")
+        return
+    bot.run(token)
+
+if __name__ == "__main__":
+    run_bot()
