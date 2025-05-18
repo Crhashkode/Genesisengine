@@ -10,16 +10,27 @@ from Interface.interface_discord import (
 intents = discord.Intents.default()
 intents.message_content = True
 intents.guilds = True
+
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-DISCORD_CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL_ID", "0"))
+DISCORD_CHANNEL_ID = os.getenv("DISCORD_CHANNEL_ID")
+if not DISCORD_CHANNEL_ID or not DISCORD_CHANNEL_ID.isdigit():
+    print("[ERROR] DISCORD_CHANNEL_ID is missing or invalid")
+    DISCORD_CHANNEL_ID = 0
+else:
+    DISCORD_CHANNEL_ID = int(DISCORD_CHANNEL_ID)
 
 @bot.event
 async def on_ready():
-    print(f"FlameBot is online as {bot.user}")
-    channel = bot.get_channel(DISCORD_CHANNEL_ID)
-    if channel:
-        asyncio.ensure_future(channel.send("**[FLAMEBOT ONLINE]** Ready to ignite. All systems synced with Genesis Engine.**"))
+    print(f"[READY] FlameBot is online as {bot.user}")
+    try:
+        channel = bot.get_channel(DISCORD_CHANNEL_ID)
+        if channel:
+            await channel.send("**[FLAMEBOT ONLINE]** Ready to ignite. All systems synced with Genesis Engine.")
+        else:
+            print(f"[WARNING] Could not find channel with ID {DISCORD_CHANNEL_ID}")
+    except Exception as e:
+        print(f"[ERROR] Discord message failed: {str(e)}")
 
 @bot.command()
 async def mint(ctx):
@@ -46,7 +57,10 @@ def run_bot():
     if not token:
         print("[ERROR] Missing DISCORD_BOT_TOKEN in environment.")
         return
-    bot.run(token)
+    try:
+        bot.run(token)
+    except Exception as e:
+        print(f"[ERROR] Bot run failed: {str(e)}")
 
 if __name__ == "__main__":
     run_bot()
