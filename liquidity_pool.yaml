@@ -1,0 +1,18 @@
+
+liquidity_pool:
+  name: "CRK/SOL"
+  token_a:
+    symbol: "CRK"
+    mint: "6Ao93qcv4jZhNP5gpk3hQSVDdi13LXZWjJsRGYEKzkLT"
+    amount: 5000
+  token_b:
+    symbol: "SOL"
+    mint: "So11111111111111111111111111111111111111112"
+    amount: 0.01
+  initial_price: 0.000002
+  provider_wallet: "F7ayoHXn5UtYg1pQK2DoaP8vXkRgFeqNxkHAMm9A7okW"
+  launch: true
+  auto_sync_discord: true
+  triggers:
+    discord_command: "!launch_liquidity"
+    recheck: true
