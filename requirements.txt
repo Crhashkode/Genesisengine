@@ -1,9 +1,13 @@
 solana==0.36.6
 base58==2.1.1
 discord.py==2.3.2
+python-dotenv
+requests
 solders
 construct
 httpx
 jsonalias
 websockets
+python-dotenv
+requests
 
