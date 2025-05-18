@@ -6,7 +6,7 @@ from solders.keypair import Keypair
 from solders.pubkey import Pubkey
 from solana.rpc.api import Client
 from spl.token.instructions import get_associated_token_address
-from vault import log_event
+from Vault.vault import log_event
 
 PRIVATE_KEY = os.getenv("SOLANA_PRIVATE_KEY")
 RPC_URL = os.getenv("SOLANA_RPC_URL", "https://api.mainnet-beta.solana.com")
