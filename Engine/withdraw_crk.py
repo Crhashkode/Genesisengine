@@ -1,41 +1,57 @@
 import os
-import base64
-from solders.keypair import Keypair
-from solders.pubkey import Pubkey as PublicKey
+import json
 from solana.rpc.api import Client
-from solders.transaction import VersionedTransaction
-from spl.token.instructions import (
-    get_associated_token_address,
-    create_associated_token_account,
-    transfer_checked,
-)
+from solana.transaction import Transaction
+from solana.keypair import Keypair
+from solana.system_program import SYS_PROGRAM_ID
+from spl.token.instructions import transfer_checked, get_associated_token_address, create_associated_token_account
 from spl.token.constants import TOKEN_PROGRAM_ID
 
-def withdraw_crk_token(client: Client, recipient: PublicKey):
-    secret = os.getenv("SOLANA_PRIVATE_KEY")
-    decoded = base64.b64decode(secret)
-    wallet = Keypair.from_bytes(decoded[:32])
-    mint = PublicKey(os.getenv("CRK_MINT_ADDRESS"))
+CRK_DECIMALS = 6
+RPC_URL = os.getenv("SOLANA_RPC_URL", "https://api.mainnet-beta.solana.com")
+MINT_ADDRESS = os.getenv("CRK_MINT_ADDRESS")
 
-    ata = get_associated_token_address(recipient, mint)
-    sender_ata = get_associated_token_address(wallet.pubkey(), mint)
+keypair_array = json.loads(os.getenv("WALLET_KEYPAIR"))
+wallet = Keypair.from_bytes(bytes(keypair_array))
+client = Client(RPC_URL)
 
-    blockhash = client.get_latest_blockhash().value.blockhash
-    txn = VersionedTransaction.populate(
-        payer=wallet.pubkey(),
-        instructions=[
+def withdraw_crk_token(recipient_address: str, amount: float):
+    try:
+        from solana.publickey import PublicKey
+        mint = PublicKey(MINT_ADDRESS)
+        recipient = PublicKey(recipient_address)
+
+        source_ata = get_associated_token_address(wallet.public_key, mint)
+        dest_ata = get_associated_token_address(recipient, mint)
+
+        tx = Transaction()
+
+        # Check if recipient ATA exists
+        resp = client.get_account_info(dest_ata)
+        if resp["result"]["value"] is None:
+            tx.add(
+                create_associated_token_account(
+                    payer=wallet.public_key,
+                    owner=recipient,
+                    mint=mint
+                )
+            )
+
+        tx.add(
             transfer_checked(
-                sender=sender_ata,
-                recipient=ata,
-                owner=wallet.pubkey(),
-                amount=1,
-                decimals=9,
+                source=source_ata,
+                dest=dest_ata,
+                owner=wallet.public_key,
+                amount=int(amount * 10**CRK_DECIMALS),
+                decimals=CRK_DECIMALS,
                 mint=mint,
                 program_id=TOKEN_PROGRAM_ID
             )
-        ],
-        recent_blockhash=blockhash
-    )
-    txn.sign([wallet])
-    response = client.send_transaction(txn)
-    return response
+        )
+
+        tx_sig = client.send_transaction(tx, wallet)["result"]
+        return tx_sig
+
+    except Exception as e:
+        print(f"[WITHDRAW ERROR] {str(e)}")
+        return None
