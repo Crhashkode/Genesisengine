@@ -5,3 +5,4 @@ construct
 httpx
 jsonalias
 websockets
+discord.py
