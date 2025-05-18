@@ -1,5 +1,6 @@
-import os
+limport os
 import discord
+import asyncio
 from discord.ext import commands
 from engine.flame_interface import mint_crk_token, get_crk_balance
 from engine.withdraw_crk import withdraw_crk_token
@@ -12,11 +13,15 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 
 SOLANA_RPC_URL = os.getenv("SOLANA_RPC_URL", "https://api.mainnet-beta.solana.com")
 CRK_MINT = os.getenv("CRK_MINT_ADDRESS")
+DISCORD_CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL_ID", "0"))
 client = Client(SOLANA_RPC_URL)
 
 @bot.event
 async def on_ready():
     print(f"FlameBot is online as {bot.user}")
+    channel = bot.get_channel(DISCORD_CHANNEL_ID)
+    if channel:
+        asyncio.ensure_future(channel.send("**[FLAMEBOT ONLINE]** Ready to ignite."))
 
 @bot.command()
 async def mint(ctx):
@@ -45,7 +50,7 @@ async def withdraw(ctx, wallet: str, amount: float):
     try:
         tx = withdraw_crk_token(client, recipient_address=wallet, amount=amount)
         await ctx.send(f"**[WITHDRAWN]** `{amount} CRK` to `{wallet}`")
-        await ctx.send(f"**TX:** https://solscan.io/tx/{tx}")
+        await ctx.send(f"https://solscan.io/tx/{tx}")
         log_event("withdraw", {"trigger": "bot", "to": wallet, "amount": amount, "tx": tx})
     except Exception as e:
         await ctx.send(f"[ERROR] Withdraw failed: {str(e)}")
