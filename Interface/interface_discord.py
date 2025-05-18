@@ -2,21 +2,28 @@ import os
 import discord
 from discord.ext import commands
 from discord.ui import Button, View
-from engine.flame_interface import mint_crk_token, get_crk_balance
+from Engine.flame_interface import mint_crk_token, get_crk_balance
+from Engine.withdraw_crk import withdraw_crk_token
 from engine.trade import get_best_swap_route, execute_swap
-from engine.withdraw_crk import withdraw_crk_token
 from vault import log_event
+from solana.rpc.api import Client
 
+# Load environment
 TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 BOT_USER_ID = int(os.getenv("DISCORD_BOT_USER_ID"))
 CRK_MINT = os.getenv("CRK_MINT_ADDRESS")
 SOL_MINT = "So11111111111111111111111111111111111111112"
+SOLANA_RPC_URL = os.getenv("SOLANA_RPC_URL", "https://api.mainnet-beta.solana.com")
+client = Client(SOLANA_RPC_URL)
 
+# Initialize bot
 intents = discord.Intents.default()
 intents.messages = True
 intents.message_content = True
+intents.guilds = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+# ==== UI Panel ====
 class EngineView(View):
     def __init__(self):
         super().__init__(timeout=None)
@@ -29,10 +36,10 @@ class EngineView(View):
 
 @bot.event
 async def on_ready():
-    print(f"Flame Interface Online as {bot.user}")
+    print(f"[READY] FlameBot online as {bot.user}")
 
 @bot.command()
-async def engine(ctx):
+async def panel(ctx):
     if ctx.author.id != BOT_USER_ID:
         await ctx.send("Access denied.")
         return
@@ -40,7 +47,7 @@ async def engine(ctx):
     embed = discord.Embed(title="CRK Flame Control Panel", color=0x00ffee)
     embed.add_field(name="CRK Mint", value=CRK_MINT or "Not Minted Yet", inline=False)
     embed.add_field(name="Vault", value="Logging Active", inline=True)
-    embed.set_footer(text="Flame Engine Prime | Quanta Operational")
+    embed.set_footer(text="Edge Core Engine | All Systems Prime")
 
     await ctx.send(embed=embed, view=EngineView())
 
@@ -79,7 +86,7 @@ async def on_interaction(interaction: discord.Interaction):
 
 @bot.command()
 async def withdraw(ctx, address: str, amount: float):
-    tx = withdraw_crk_token(address, amount)
+    tx = withdraw_crk_token(client, recipient_address=address, amount=amount)
     if tx:
         await ctx.send(f"Withdraw Complete: https://solscan.io/tx/{tx}")
         log_event("withdraw", {"to": address, "amount": amount, "tx": tx})
@@ -96,3 +103,11 @@ async def swap(ctx, amount: float):
         log_event("swap", {"amount": amount, "tx": tx})
     else:
         await ctx.send("Swap failed.")
+
+@bot.command()
+async def ping(ctx):
+    await ctx.send("Pong! FlameBot is synced and operational.")
+
+@bot.command()
+async def status(ctx):
+    await ctx.send("**[STATUS]** Genesis Engine is fully operational. CRK, Vault, ATA, and Liquidity modules are linked. Awaiting commands...")
