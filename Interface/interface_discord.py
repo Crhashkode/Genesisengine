@@ -1,113 +1,46 @@
 import os
-import discord
-from discord.ext import commands
-from discord.ui import Button, View
-from Engine.flame_interface import mint_crk_token, get_crk_balance
-from Engine.withdraw_crk import withdraw_crk_token
-from engine.trade import get_best_swap_route, execute_swap
-from vault import log_event
+from engine.flame_interface import mint_crk_token, get_crk_balance
+from engine.withdraw_crk import withdraw_crk_token
+from vault.vault import log_event
 from solana.rpc.api import Client
+import discord
 
-# Load environment
-TOKEN = os.getenv("DISCORD_BOT_TOKEN")
-BOT_USER_ID = int(os.getenv("DISCORD_BOT_USER_ID"))
-CRK_MINT = os.getenv("CRK_MINT_ADDRESS")
-SOL_MINT = "So11111111111111111111111111111111111111112"
 SOLANA_RPC_URL = os.getenv("SOLANA_RPC_URL", "https://api.mainnet-beta.solana.com")
+CRK_MINT = os.getenv("CRK_MINT_ADDRESS")
 client = Client(SOLANA_RPC_URL)
 
-# Initialize bot
-intents = discord.Intents.default()
-intents.messages = True
-intents.message_content = True
-intents.guilds = True
-bot = commands.Bot(command_prefix="!", intents=intents)
+async def handle_mint(ctx):
+    try:
+        mint_address = mint_crk_token()
+        await ctx.send(f"[MINTED] CRK Token: `{mint_address}`")
+        log_event("mint", {"trigger": "discord", "mint_address": mint_address})
+    except Exception as e:
+        await ctx.send(f"[ERROR] Mint failed: {str(e)}")
+        log_event("error", {"action": "mint", "reason": str(e)})
 
-# ==== UI Panel ====
-class EngineView(View):
-    def __init__(self):
-        super().__init__(timeout=None)
-        self.add_item(Button(label="Mint", style=discord.ButtonStyle.primary, custom_id="mint"))
-        self.add_item(Button(label="Balance", style=discord.ButtonStyle.success, custom_id="balance"))
-        self.add_item(Button(label="Withdraw", style=discord.ButtonStyle.secondary, custom_id="withdraw"))
-        self.add_item(Button(label="Swap", style=discord.ButtonStyle.danger, custom_id="swap"))
-        self.add_item(Button(label="Status", style=discord.ButtonStyle.success, custom_id="status"))
-        self.add_item(Button(label="Ping", style=discord.ButtonStyle.primary, custom_id="ping"))
-
-@bot.event
-async def on_ready():
-    print(f"[READY] FlameBot online as {bot.user}")
-
-@bot.command()
-async def panel(ctx):
-    if ctx.author.id != BOT_USER_ID:
-        await ctx.send("Access denied.")
-        return
-
-    embed = discord.Embed(title="CRK Flame Control Panel", color=0x00ffee)
-    embed.add_field(name="CRK Mint", value=CRK_MINT or "Not Minted Yet", inline=False)
-    embed.add_field(name="Vault", value="Logging Active", inline=True)
-    embed.set_footer(text="Edge Core Engine | All Systems Prime")
-
-    await ctx.send(embed=embed, view=EngineView())
-
-@bot.event
-async def on_interaction(interaction: discord.Interaction):
-    if interaction.user.id != BOT_USER_ID:
-        await interaction.response.send_message("Access denied.", ephemeral=True)
-        return
-
-    cid = interaction.data.get("custom_id")
-
-    if cid == "mint":
-        mint = mint_crk_token()
-        if mint:
-            await interaction.response.send_message(f"CRK Minted: `{mint}`")
-            log_event("mint", {"mint_address": mint})
-        else:
-            await interaction.response.send_message("Mint failed.")
-
-    elif cid == "balance":
+async def handle_balance(ctx):
+    try:
+        if not CRK_MINT:
+            raise ValueError("CRK_MINT_ADDRESS not set.")
         balance = get_crk_balance(CRK_MINT)
-        await interaction.response.send_message(f"CRK Balance: `{balance}`")
-        log_event("balance_check", {"balance": balance})
+        await ctx.send(f"[BALANCE] `{balance} CRK`")
+        log_event("balance_check", {"trigger": "discord", "mint": CRK_MINT, "balance": balance})
+    except Exception as e:
+        await ctx.send(f"[ERROR] Balance check failed: {str(e)}")
+        log_event("error", {"action": "balance", "reason": str(e)})
 
-    elif cid == "withdraw":
-        await interaction.response.send_message("Use `!withdraw <address> <amount>`", ephemeral=True)
+async def handle_withdraw(ctx, wallet: str, amount: float):
+    try:
+        tx = withdraw_crk_token(client, recipient_address=wallet, amount=amount)
+        await ctx.send(f"[WITHDRAWN] `{amount} CRK` to `{wallet}`")
+        await ctx.send(f"https://solscan.io/tx/{tx}")
+        log_event("withdraw", {"trigger": "discord", "to": wallet, "amount": amount, "tx": tx})
+    except Exception as e:
+        await ctx.send(f"[ERROR] Withdraw failed: {str(e)}")
+        log_event("error", {"action": "withdraw", "reason": str(e)})
 
-    elif cid == "swap":
-        await interaction.response.send_message("Use `!swap <amount>`", ephemeral=True)
+async def handle_ping(ctx):
+    await ctx.send("Pong! FlameBot is synced and online.")
 
-    elif cid == "status":
-        await interaction.response.send_message("Genesis Engine Prime. Vault, CRK, ATA, and Liquidity Systems linked.")
-
-    elif cid == "ping":
-        await interaction.response.send_message("FlameBot is awake and synced.")
-
-@bot.command()
-async def withdraw(ctx, address: str, amount: float):
-    tx = withdraw_crk_token(client, recipient_address=address, amount=amount)
-    if tx:
-        await ctx.send(f"Withdraw Complete: https://solscan.io/tx/{tx}")
-        log_event("withdraw", {"to": address, "amount": amount, "tx": tx})
-    else:
-        await ctx.send("Withdraw failed.")
-
-@bot.command()
-async def swap(ctx, amount: float):
-    raw = int(amount * 10**6)
-    route = get_best_swap_route(CRK_MINT, SOL_MINT, raw)
-    tx = execute_swap(route)
-    if tx:
-        await ctx.send(f"Swapped to SOL: https://solscan.io/tx/{tx}")
-        log_event("swap", {"amount": amount, "tx": tx})
-    else:
-        await ctx.send("Swap failed.")
-
-@bot.command()
-async def ping(ctx):
-    await ctx.send("Pong! FlameBot is synced and operational.")
-
-@bot.command()
-async def status(ctx):
-    await ctx.send("**[STATUS]** Genesis Engine is fully operational. CRK, Vault, ATA, and Liquidity modules are linked. Awaiting commands...")
+async def handle_status(ctx):
+    await ctx.send("**[STATUS]** Genesis Engine is fully operational. CRK, Vault, ATA, and Liquidity modules are synced.")
