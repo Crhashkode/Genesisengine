@@ -1,61 +1,40 @@
-import os
+ import os
 import base64
-import json
-from datetime import datetime
-from solders.keypair import Keypair
-from solders.pubkey import Pubkey
 from solana.rpc.api import Client
+from solana.transaction import Transaction
+from solana.keypair import Keypair
 from spl.token.instructions import get_associated_token_address
-from Vault.vault import log_event
+from spl.token.client import Token
+from spl.token.constants import TOKEN_PROGRAM_ID
+from vault.vault import log_event
 
-PRIVATE_KEY = os.getenv("SOLANA_PRIVATE_KEY")
+# === ENV SETUP ===
+PRIVATE_KEY = os.getenv("PRIVATE_KEY_BASE64")
+CRK_MINT_ADDRESS = os.getenv("CRK_MINT_ADDRESS")
 RPC_URL = os.getenv("SOLANA_RPC_URL", "https://api.mainnet-beta.solana.com")
-CRK_MINT = os.getenv("CRK_MINT_ADDRESS")
-VAULT_PATH = "vault/vault.json"
-
-decoded = base64.b64decode(PRIVATE_KEY)
-wallet = Keypair.from_bytes(decoded)
 client = Client(RPC_URL)
 
-class FlameInterface:
-    def __init__(self):
-        self.mint_address = self.load_mint()
-        self.owner_wallet = str(wallet.pubkey())
-        self.balance = self.get_crk_balance()
-        self.status = "LIVE"
-        self.withdrawals_enabled = True
-        self.last_withdrawal = self.get_last_withdrawal()
+# === WALLET SETUP ===
+if not PRIVATE_KEY:
+    raise Exception("PRIVATE_KEY_BASE64 is not set.")
+decoded = base64.b64decode(PRIVATE_KEY)
+keypair = Keypair.from_secret_key(decoded)
 
-    def load_mint(self):
-        if os.path.exists(VAULT_PATH):
-            try:
-                with open(VAULT_PATH, "r") as f:
-                    data = json.load(f)
-                    return data.get("crk_mint", CRK_MINT)
-            except Exception:
-                return CRK_MINT
-        return CRK_MINT
+def mint_crk_token():
+    # Simulated Mint Handler (placeholder, implement token program minting if authorized)
+    tx_sig = "SimulatedMintSignature"
+    log_event("mint_crk_token", {"tx": tx_sig})
+    return tx_sig
 
-    def get_crk_balance(self):
-        try:
-            mint = Pubkey.from_string(self.mint_address)
-            ata = get_associated_token_address(wallet.pubkey(), mint)
-            result = client.get_token_account_balance(ata)
-            return float(result["result"]["value"]["uiAmount"])
-        except Exception as e:
-            print(f"[ERROR] Failed to fetch CRK balance: {e}")
-            return 0.0
+def get_crk_balance(mint_address: str):
+    ata = get_associated_token_address(owner=keypair.public_key, mint=mint_address)
+    resp = client.get_token_account_balance(ata)
+    if resp.get("result"):
+        return resp["result"]["value"]["uiAmount"]
+    return 0.0
 
-    def get_last_withdrawal(self):
-        if not os.path.exists(VAULT_PATH):
-            return "None"
-        try:
-            with open(VAULT_PATH, "r") as f:
-                vault = json.load(f)
-                events = vault.get("events", [])
-                for e in reversed(events):
-                    if e["type"] == "withdraw":
-                        return e["timestamp"]
-        except:
-            pass
-        return "None"
+def transfer_crk(to_wallet: str, amount: float):
+    # Placeholder; transfer logic would go here
+    tx_sig = "SimulatedTransferSignature"
+    log_event("transfer_crk", {"to": to_wallet, "amount": amount, "tx": tx_sig})
+    return tx_sig
