@@ -6,16 +6,16 @@ from Interface.interface_discord import (
     handle_mint, handle_balance, handle_withdraw,
     handle_ping, handle_status
 )
-from Vault.vault import log_event  # <<== Vault logging added
 
 intents = discord.Intents.default()
 intents.message_content = True
 intents.guilds = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
+# Pull from env or fall back to raw for test
 DISCORD_CHANNEL_ID = os.getenv("DISCORD_CHANNEL_ID")
-if not DISCORD_CHANNEL_ID or not DISCORD_CHANNEL_ID.isdigit():
-    print("[ERROR] DISCORD_CHANNEL_ID is missing or invalid")
+if DISCORD_CHANNEL_ID is None:
+    print("[ERROR] DISCORD_CHANNEL_ID is not set in env.")
     DISCORD_CHANNEL_ID = 0
 else:
     DISCORD_CHANNEL_ID = int(DISCORD_CHANNEL_ID)
@@ -26,12 +26,11 @@ async def on_ready():
     try:
         channel = bot.get_channel(DISCORD_CHANNEL_ID)
         if channel:
-            await channel.send("**[FLAMEBOT ONLINE]** Ready to ignite. All systems synced with Genesis Engine.")
-            log_event("flamebot_start", {"status": "ready", "bot_id": str(bot.user.id)})
+            await channel.send("**[FLAMEBOT ONLINE]** All systems synced. Awaiting commands.")
         else:
-            print("[WARNING] Could not find the channel.")
+            print(f"[WARNING] Could not locate channel with ID: {DISCORD_CHANNEL_ID}")
     except Exception as e:
-        print(f"[ERROR] Discord message failed: {str(e)}")
+        print(f"[ERROR] Failed to send initial message: {e}")
 
 @bot.command()
 async def mint(ctx):
@@ -56,7 +55,7 @@ async def status(ctx):
 def run_bot():
     token = os.getenv("DISCORD_BOT_TOKEN")
     if not token:
-        print("[ERROR] Missing DISCORD_BOT_TOKEN in environment.")
+        print("[ERROR] DISCORD_BOT_TOKEN not found in env.")
         return
     bot.run(token)
 
