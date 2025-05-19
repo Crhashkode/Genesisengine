@@ -1,7 +1,8 @@
-class Snake:
-    def fallback(self, func, *args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            print(f"[SNAKE RECOVERY] {str(e)}")
-            return None
+from vault.vault import log_event
+
+def stealth_log(event: str, message: str):
+    try:
+        log_event("snake_log", {"event": event, "msg": message})
+        return f"[SNAKE] Logged: {event} → {message}"
+    except Exception as e:
+        return f"[SNAKE ERROR] {str(e)}"
