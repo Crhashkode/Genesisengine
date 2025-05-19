@@ -2,19 +2,19 @@ import os
 from engine.flame_interface import mint_crk_token, get_crk_balance, transfer_crk
 from engine.trade import get_best_swap_route, execute_swap
 from engine.withdraw_crk import withdraw_crk_token
-from vault import log_event
+from Vault.vault import log_event
 
-# === Load Environment ===
 CRK_MINT = os.getenv("CRK_MINT_ADDRESS")
 SOL_MINT = "So11111111111111111111111111111111111111112"
 
 def main():
-    print("\n=== GENESIS ENGINE CONTROL PANEL ===")
+    print("\n=== GENESIS ENGINE TERMINAL ===")
     print("1. Mint CRK")
     print("2. Check Balance")
     print("3. Withdraw CRK")
     print("4. Swap CRK → SOL")
-    print("====================================")
+    print("0. Exit")
+    print("===============================")
 
     choice = input("Select option: ").strip()
 
@@ -57,6 +57,10 @@ def main():
                 log_event("swap", {"amount": amount, "tx": tx})
             else:
                 raise Exception("Swap failed.")
+
+        elif choice == "0":
+            print("Exiting Genesis Engine.")
+            return
 
         else:
             raise ValueError("Invalid selection.")
