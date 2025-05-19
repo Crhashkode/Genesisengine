@@ -1,7 +1,7 @@
 import os
-from engine.flame_interface import mint_crk_token, get_crk_balance
-from engine.withdraw_crk import withdraw_crk_token
-from vault.vault import log_event
+from Engine.flame_interface import mint_crk_token, get_crk_balance
+from Engine.withdraw_crk import withdraw_crk_token
+from Vault.vault import log_event
 from solana.rpc.api import Client
 import discord
 
