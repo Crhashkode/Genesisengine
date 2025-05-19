@@ -12,10 +12,9 @@ intents.message_content = True
 intents.guilds = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-# Pull from env or fall back to raw for test
 DISCORD_CHANNEL_ID = os.getenv("DISCORD_CHANNEL_ID")
 if DISCORD_CHANNEL_ID is None:
-    print("[ERROR] DISCORD_CHANNEL_ID is not set in env.")
+    print("[ERROR] DISCORD_CHANNEL_ID not found in environment.")
     DISCORD_CHANNEL_ID = 0
 else:
     DISCORD_CHANNEL_ID = int(DISCORD_CHANNEL_ID)
@@ -26,11 +25,11 @@ async def on_ready():
     try:
         channel = bot.get_channel(DISCORD_CHANNEL_ID)
         if channel:
-            await channel.send("**[FLAMEBOT ONLINE]** All systems synced. Awaiting commands.")
+            await channel.send("**[FLAMEBOT ONLINE]** Genesis Engine synced. Ready for command input.")
         else:
-            print(f"[WARNING] Could not locate channel with ID: {DISCORD_CHANNEL_ID}")
+            print(f"[WARNING] Cannot locate Discord channel: {DISCORD_CHANNEL_ID}")
     except Exception as e:
-        print(f"[ERROR] Failed to send initial message: {e}")
+        print(f"[ERROR] Unable to send startup message: {e}")
 
 @bot.command()
 async def mint(ctx):
@@ -55,7 +54,7 @@ async def status(ctx):
 def run_bot():
     token = os.getenv("DISCORD_BOT_TOKEN")
     if not token:
-        print("[ERROR] DISCORD_BOT_TOKEN not found in env.")
+        print("[ERROR] DISCORD_BOT_TOKEN is not set.")
         return
     bot.run(token)
 
