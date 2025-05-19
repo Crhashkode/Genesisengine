@@ -7,7 +7,7 @@ from spl.token.instructions import (
     transfer_checked
 )
 import base64, os
-from vault.vault import log_event
+from Vault.vault import log_event
 
 RPC_URL = os.getenv("SOLANA_RPC_URL", "https://api.mainnet-beta.solana.com")
 PRIVATE_KEY = os.getenv("PRIVATE_KEY_BASE64")
