@@ -6,7 +6,7 @@ from solana.keypair import Keypair
 from spl.token.instructions import get_associated_token_address
 from spl.token.client import Token
 from spl.token.constants import TOKEN_PROGRAM_ID
-from vault.vault import log_event
+from Vault.vault import log_event
 
 # === ENV SETUP ===
 PRIVATE_KEY = os.getenv("PRIVATE_KEY_BASE64")
