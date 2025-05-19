@@ -4,7 +4,7 @@ from solana.keypair import Keypair
 from solana.rpc.api import Client
 from solana.rpc.types import TxOpts
 import base64
-from vault.vault import log_event
+from Vault.vault import log_event
 
 RPC_URL = os.getenv("SOLANA_RPC_URL", "https://api.mainnet-beta.solana.com")
 PRIVATE_KEY = os.getenv("PRIVATE_KEY_BASE64")
