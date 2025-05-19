@@ -1,113 +1,21 @@
 {
-    "events": [
-        {
-            "timestamp": "2025-05-15T00:00:00Z",
-            "type": "vault_initialized",
-            "data": {
-                "message": "Vault reset by CR\u2019HASH. New chain event log begins."
-            }
-        },
-        {
-            "timestamp": "2025-05-15T22:54:54.889283Z",
-            "type": "error",
-            "data": {
-                "action": "mint_crk_token",
-                "reason": ""
-            }
-        },
-        {
-            "timestamp": "2025-05-15T22:54:54.951649Z",
-            "type": "error",
-            "data": {
-                "node": "Quanta",
-                "action": "mint",
-                "reason": "404 Not Found (error code: 10062): Unknown interaction"
-            }
-        },
-        {
-            "timestamp": "2025-05-15T23:45:00Z",
-            "type": "mint_confirmed",
-            "data": {
-                "mint_address": "6Ao93qcv4jZhNP5gpk3hQSVDdi13LXZWjJsRGYEKzkLT",
-                "message": "CRK Mint confirmed and locked into system by C.R.hash"
-            }
-        },
-        {
-            "timestamp": "2025-05-16T00:19:02.388271",
-            "type": "error",
-            "data": {
-                "action": "mint_crk_token",
-                "reason": ""
-            }
-        },
-        {
-            "timestamp": "2025-05-16T00:19:02.517850",
-            "type": "error",
-            "data": {
-                "node": "Quanta",
-                "action": "mint",
-                "reason": "404 Not Found (error code: 10062): Unknown interaction"
-            }
-        },
-        {
-            "timestamp": "2025-05-16T01:38:06.205549",
-            "type": "error",
-            "data": {
-                "action": "mint_crk_token",
-                "reason": ""
-            }
-        },
-        {
-            "timestamp": "2025-05-16T01:38:06.274510",
-            "type": "error",
-            "data": {
-                "node": "Quanta",
-                "action": "mint",
-                "reason": "404 Not Found (error code: 10062): Unknown interaction"
-            }
-        },
-        {
-            "timestamp": "2025-05-16T02:10:09.612211",
-            "type": "error",
-            "data": {
-                "action": "mint_crk_token",
-                "reason": ""
-            }
-        },
-        {
-            "timestamp": "2025-05-16T02:10:09.677016",
-            "type": "error",
-            "data": {
-                "node": "Quanta",
-                "action": "mint",
-                "reason": "404 Not Found (error code: 10062): Unknown interaction"
-            }
-        },
-        {
-            "timestamp": "2025-05-16T06:36:56.149073",
-            "type": "withdraw",
-            "data": {
-                "to": "F7ayoHXn5UtYg1pQK2DoaP8vXkRgFeqNxkHAMm9A7okW",
-                "amount": 1
-            }
-        },
-        {
-            "timestamp": "2025-05-16T16:01:56.034823",
-            "type": "error",
-            "data": {
-                "node": "Quanta",
-                "action": "withdraw",
-                "reason": "withdraw_crk_token() takes 0 positional arguments but 2 were given"
-            }
-        },
-        {
-            "timestamp": "2025-05-16T16:09:59.828397",
-            "type": "error",
-            "data": {
-                "node": "Quanta",
-                "action": "withdraw",
-                "reason": "expected a sequence of length 64 (got 32)"
-            }
-        }
-    ]
+  "balances": {
+    "CRK": {
+      "raw": 0,
+      "amount": 0.0,
+      "usd": 0.0
+    },
+    "SOL": {
+      "raw": 0,
+      "amount": 0.0,
+      "usd": 0.0
+    }
+  },
+  "revenue": {
+    "total_mined_usd": 0.0,
+    "total_mined_crk": 0,
+    "streams": []
+  },
+  "logs": [],
+  "updated": "2025-05-19T01:53:30.796228"
 }
