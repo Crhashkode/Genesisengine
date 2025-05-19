@@ -1,57 +1,51 @@
-import os
-import json
 from solana.rpc.api import Client
+from solana.rpc.types import TxOpts
 from solana.transaction import Transaction
 from solana.keypair import Keypair
-from solana.system_program import SYS_PROGRAM_ID
-from spl.token.instructions import transfer_checked, get_associated_token_address, create_associated_token_account
-from spl.token.constants import TOKEN_PROGRAM_ID
+from spl.token.instructions import (
+    get_associated_token_address, create_associated_token_account,
+    transfer_checked
+)
+import base64, os
+from vault.vault import log_event
 
-CRK_DECIMALS = 6
 RPC_URL = os.getenv("SOLANA_RPC_URL", "https://api.mainnet-beta.solana.com")
-MINT_ADDRESS = os.getenv("CRK_MINT_ADDRESS")
+PRIVATE_KEY = os.getenv("PRIVATE_KEY_BASE64")
+CRK_MINT = os.getenv("CRK_MINT_ADDRESS")
 
-keypair_array = json.loads(os.getenv("WALLET_KEYPAIR"))
-wallet = Keypair.from_bytes(bytes(keypair_array))
+if not PRIVATE_KEY:
+    raise Exception("PRIVATE_KEY_BASE64 is not set.")
+decoded = base64.b64decode(PRIVATE_KEY)
+keypair = Keypair.from_secret_key(decoded)
 client = Client(RPC_URL)
 
-def withdraw_crk_token(recipient_address: str, amount: float):
+def withdraw_crk_token(recipient_address: str, amount: float) -> str:
     try:
-        from solana.publickey import PublicKey
-        mint = PublicKey(MINT_ADDRESS)
-        recipient = PublicKey(recipient_address)
+        mint = CRK_MINT
+        from_pub = keypair.public_key
+        to_pub = recipient_address
 
-        source_ata = get_associated_token_address(wallet.public_key, mint)
-        dest_ata = get_associated_token_address(recipient, mint)
+        from_ata = get_associated_token_address(from_pub, mint)
+        to_ata = get_associated_token_address(to_pub, mint)
 
-        tx = Transaction()
+        # Create to_ata if needed
+        info = client.get_account_info(to_ata)
+        txn = Transaction()
+        if not info["result"]["value"]:
+            txn.add(create_associated_token_account(from_pub, to_pub, mint))
 
-        # Check if recipient ATA exists
-        resp = client.get_account_info(dest_ata)
-        if resp["result"]["value"] is None:
-            tx.add(
-                create_associated_token_account(
-                    payer=wallet.public_key,
-                    owner=recipient,
-                    mint=mint
-                )
-            )
+        txn.add(transfer_checked(
+            source=from_ata,
+            dest=to_ata,
+            owner=from_pub,
+            mint=mint,
+            amount=int(amount * 10**6),
+            decimals=6
+        ))
 
-        tx.add(
-            transfer_checked(
-                source=source_ata,
-                dest=dest_ata,
-                owner=wallet.public_key,
-                amount=int(amount * 10**CRK_DECIMALS),
-                decimals=CRK_DECIMALS,
-                mint=mint,
-                program_id=TOKEN_PROGRAM_ID
-            )
-        )
-
-        tx_sig = client.send_transaction(tx, wallet)["result"]
+        res = client.send_transaction(txn, keypair, opts=TxOpts(skip_preflight=True, preflight_commitment="processed"))
+        tx_sig = res["result"]
+        log_event("withdraw_crk", {"to": recipient_address, "amount": amount, "tx": tx_sig})
         return tx_sig
-
     except Exception as e:
-        print(f"[WITHDRAW ERROR] {str(e)}")
-        return None
+        log_event("withdraw_error", {"to": recipient_address, "error": str(e)})
